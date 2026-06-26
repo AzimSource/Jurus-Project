@@ -1,1 +1,1 @@
-# AI-Anti-Scam
+# JURUS Project
