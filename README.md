@@ -1,4 +1,4 @@
-# 🛡️ JURUS Project
+# 🛡️ JURUS ANALYST - PROJECT
 
 ## Secure IT Helpdesk Ticketing System Infrastructure
 
