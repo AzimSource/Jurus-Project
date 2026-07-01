@@ -62,13 +62,13 @@ sudo systemctl restart apache2
 Check HTTPS response:
 
 ```bash
-curl -k -I https://192.168.194.131
+curl -k -I https://IP_ADDRESS
 ```
 
 Check SSL/TLS connection:
 
 ```bash
-openssl s_client -connect 192.168.194.131:443
+openssl s_client -connect IP_ADDRESS:443
 ```
 
 ## Expected Result
@@ -85,7 +85,7 @@ Strict-Transport-Security: max-age=31536000; includeSubDomains
 The Nmap scan should also show port `443` open:
 
 ```bash
-nmap -sV -p 443 192.168.194.131
+nmap -sV -p 443 <IP ADDRESS>
 ```
 
 Expected result:
