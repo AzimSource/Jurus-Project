@@ -1,169 +1,577 @@
-# Modul 1: OS
-#show service 
+---
+
+# 🎯 Demo Flow (JURUS Analyst)
+
+## Module 1 – Operating System Engineering
+
+### Objective
+
+Secure the Ubuntu Server by applying operating system hardening and securing remote administrative access.
+
+---
+
+## 1. Verify System Services
+
+### Configuration
+
+Verify that the required services are running.
+
+```bash
 hostnamectl
 uptime
 sudo systemctl status apache2 --no-pager
 sudo systemctl status mariadb --no-pager
 sudo systemctl status ssh --no-pager
+```
 
-#show key
-cat /root/.ssh/id_ed25519  → linux
-cat /home/azim/.ssh/authorized_keys → ubuntu
+### Explain
 
-#show ssh hardening configuration
+> First, I verify that the Ubuntu Server is running correctly and that Apache, MariaDB, and SSH services are active before applying any security controls.
+
+### Verification
+
+✔ Apache running
+
+✔ MariaDB running
+
+✔ SSH running
+
+---
+
+## 2. SSH Key-Based Authentication
+
+### Configuration
+
+Ubuntu
+
+```bash
+cat /home/azim/.ssh/authorized_keys
+```
+
+Kali Linux
+
+```bash
+ls ~/.ssh
+```
+
+(Optional)
+
+```bash
+ssh -i ~/.ssh/id_ed25519 -p 2222 azim@192.168.194.131
+```
+
+### Explain
+
+> Instead of using passwords, SSH uses key-based authentication. The public key is stored on Ubuntu, while the private key remains securely on the Kali machine.
+
+### Verification
+
+✔ Public key exists
+
+✔ Login succeeds using private key
+
+---
+
+## 3. SSH Hardening
+
+### Configuration
+
+```bash
 sudo grep -E "Port|PermitRootLogin|PubkeyAuthentication|PasswordAuthentication|MaxAuthTries|X11Forwarding|AllowUsers" /etc/ssh/sshd_config
+```
 
-#show listening port
+### Explain
+
+Show one by one.
+
+* Root login disabled
+* Password authentication disabled
+* Key authentication enabled
+* SSH moved to port 2222
+* Authentication attempts limited
+* Only authorized user allowed
+
+### Verification
+
+```bash
 sudo ss -tulpn | grep ssh
+```
 
+Expected
 
-#show password policy
+```
+LISTEN :2222
+```
+
+---
+
+## 4. Password Policy
+
+### Configuration
+
+```bash
 grep -E "minlen|dcredit|ucredit|lcredit|ocredit|retry|difok" /etc/security/pwquality.conf
+
 grep pam_pwquality /etc/pam.d/common-password
+```
 
-#Enable password aging administrative password
-chage -l azim
+### Explain
 
-#testpolicy
+> Passwords must meet complexity requirements to reduce weak password attacks.
+
+### Verification
+
+Create test account.
+
+```bash
 sudo adduser testpolicy
 sudo passwd testpolicy
+```
+
+Try
+
+```
+12345678
+```
+
+Explain
+
+> Password rejected because it does not satisfy the password policy.
+
+Delete account
+
+```bash
 sudo deluser --remove-home testpolicy
+```
 
-# Modul 2: Network
-#firewall rules
+---
+
+## 5. Password Aging
+
+```bash
+chage -l azim
+```
+
+Explain
+
+> Password expiration and warning days are configured to reduce long-term password exposure.
+
+---
+
+# Module 2 – Network Security
+
+### Objective
+
+Protect the server from unauthorized network access.
+
+---
+
+## 1. Firewall
+
+### Configuration
+
+```bash
 sudo ufw status verbose
+```
 
-#scan
+Explain
+
+> UFW uses a default deny policy and only required services are allowed.
+
+Highlight
+
+* HTTP
+
+* HTTPS
+
+* SSH 2222
+
+---
+
+## 2. Network Validation
+
+Run on Kali
+
+```bash
 nmap -sV -p 22,80,443,2222 192.168.194.131
+```
 
-#show fail2ban
-sudo systemctl status fail2ban --no-pager
-#show config
+Explain
+
+> Port 22 is no longer accessible while SSH is only available through port 2222.
+
+---
+
+## 3. Fail2Ban
+
+### Configuration
+
+```bash
+sudo systemctl status fail2ban
+
 sudo cat /etc/fail2ban/jail.local
+```
+
+Explain
+
+> Fail2Ban automatically blocks repeated failed SSH login attempts.
+
+### Verification
+
+```bash
 sudo fail2ban-client status sshd
-#Modul 3; Database
-#show service
-sudo systemctl status mariadb --no-pager
+```
 
-#show mariadb local-only
-sudo nano /etc/mysql/mariadb.conf.d/50-server.cnf
-sudo ss -tulpn | grep -E "mysql|mariadb|3306"
+Highlight
 
-#scan nmap
-nmap -sV -p 3306 192.168.194.131
+```
+Currently banned
 
-#show dedicated database user
-sudo mysql -u root -e "SELECT User, Host FROM mysql.user WHERE User='osticket_user';"
+Banned IP List
+```
 
-#show database grants
+---
+
+# Module 3 – Database Security
+
+### Objective
+
+Protect sensitive helpdesk data.
+
+---
+
+## 1. Verify Database
+
+```bash
+sudo systemctl status mariadb
+```
+
+---
+
+## 2. Local-only Database
+
+Configuration
+
+```bash
+sudo ss -tulpn | grep 3306
+```
+
+Explain
+
+> MariaDB listens only on localhost.
+
+Validation
+
+From Kali
+
+```bash
+nmap -sV -p3306 192.168.194.131
+```
+
+Expected
+
+```
+closed
+filtered
+```
+
+---
+
+## 3. Dedicated Database User
+
+```bash
+sudo mysql -e "SELECT User,Host FROM mysql.user WHERE User='osticket_user';"
+
 sudo mysql -e "SHOW GRANTS FOR 'osticket_user'@'localhost';"
+```
 
-#show ticket data stored in db
-sudo mysql -u root -e "USE osticket_db; SELECT t.ticket_id, t.number, c.subject, t.created FROM ost_ticket t LEFT JOIN ost_ticket__cdata c ON t.ticket_id=c.ticket_id ORDER BY t.ticket_id DESC LIMIT 5;"
+Explain
 
-#Modul 4 Application
-→ show ticket creation at admin panel
-#setup removed
+> osTicket does not use the MariaDB root account.
+
+---
+
+## 4. Verify Ticket Stored
+
+```bash
+sudo mysql -u root -e "
+USE osticket_db;
+SELECT ticket_id,number
+FROM ost_ticket
+ORDER BY ticket_id DESC
+LIMIT 5;"
+```
+
+Explain
+
+> The ticket created from osTicket is successfully stored inside the database.
+
+---
+
+# Module 4 – Application Security
+
+### Objective
+
+Reduce web application attack surface.
+
+---
+
+## 1. Live Demo
+
+Create one ticket.
+
+Explain
+
+> User submits ticket.
+
+Staff receives ticket.
+
+---
+
+## 2. Setup Removed
+
+```bash
 ls -ld /var/www/osticket/setup
+```
 
-#config file permission
+Explain
+
+> Attackers cannot rerun installation.
+
+---
+
+## 3. Secure Configuration File
+
+```bash
 ls -l /var/www/osticket/include/ost-config.php
+```
 
-#show apache header config
-sudo grep -R "Header always set" /etc/apache2/sites-available/osticket.conf
+Explain
 
-#scan apache
+> Configuration file has restricted permission.
+
+---
+
+## 4. Security Headers
+
+```bash
 curl -I http://192.168.194.131
+```
 
-#show https enable using a self-signed certificate
-sudo grep -E "SSLProtocol|SSLCipherSuite|Strict-Transport-Security|SSLCertificate" /etc/apache2/sites-available/osticket-ssl.conf
-#scan
+Highlight
+
+```
+X-Frame-Options
+
+X-Content-Type-Options
+
+Referrer-Policy
+```
+
+---
+
+## 5. HTTPS
+
+```bash
 curl -k -I https://192.168.194.131
-openssl s_client -connect 192.168.194.131:443
+```
 
-#show sensitive file blocked
-sudo nano /etc/apache2/sites-available/osticket.conf
+Explain
+
+> HTTPS encrypts communication between client and server.
+
+---
+
+## 6. Sensitive File Protection
+
+```bash
 curl -I http://192.168.194.131/web.config
-nikto -h http://192.168.194.131
+```
 
-#show apache banner hardening
-sudo grep -R "ServerTokens\|ServerSignature" /etc/apache2/conf-available/security.conf
+Expected
 
-#scan apache
+```
+403 Forbidden
+```
+
+---
+
+## 7. Apache Banner
+
+```bash
 curl -I http://192.168.194.131
+```
 
+Explain
 
+> Apache version is hidden to reduce information disclosure.
 
+---
 
-#Modul5 Monitoring
-#show ufw log
-sudo tail -n 30 /var/log/ufw.log
+# Module 5 – Security Monitoring
 
-#show ssh auth log
-sudo tail -n 30 /var/log/auth.log
-sudo journalctl -u ssh -n 30 --no-pager
+### Objective
 
-#show fail2ban
-sudo fail2ban-client status sshd
-sudo tail -n 30 /var/log/fail2ban.log
+Monitor system activities and detect security events.
 
-#Show apache log
-sudo ls -lh /var/log/apache2/
-sudo tail -n 30 /var/log/apache2/access.log
-sudo tail -n 30 /var/log/apache2/error.log
-sudo tail -n 30 /var/log/apache2/osticket_error.log
+---
 
+## UFW Logs
 
-#show logwatch report
+```bash
+sudo tail /var/log/ufw.log
+```
+
+Explain
+
+Blocked traffic.
+
+---
+
+## SSH Logs
+
+```bash
+sudo journalctl -u ssh
+```
+
+Explain
+
+Successful and failed login.
+
+---
+
+## Fail2Ban Logs
+
+```bash
+sudo tail /var/log/fail2ban.log
+```
+
+Explain
+
+Automatically banned attacker IP.
+
+---
+
+## Apache Logs
+
+```bash
+sudo tail /var/log/apache2/access.log
+
+sudo tail /var/log/apache2/error.log
+```
+
+Explain
+
+Monitor web access and application errors.
+
+---
+
+## Logwatch
+
+```bash
 cat /tmp/logwatch_security_report.txt
-→ generate
-sudo logwatch --detail High --range today --format text | less
+```
 
+Explain
 
-#Modul 6 BCP
-#show backup directory
+Daily security summary.
 
-sudo ls -l /backup/osticket
-sudo ls -lh /backup/osticket/db
-sudo ls -lh /backup/osticket/files
-sudo ls -lh /backup/osticket/checksums
-sudo ls -lh /backup/osticket/logs
+---
 
+# Module 6 – Business Continuity Planning
 
-#show backup script
-ls -l /usr/local/bin/osticket_backup.sh
+### Objective
+
+Ensure the system can recover after failure.
+
+---
+
+## Backup Directory
+
+```bash
+sudo ls -lh /backup/osticket
+```
+
+Explain
+
+Backup organization.
+
+---
+
+## Backup Script
+
+```bash
 sudo nano /usr/local/bin/osticket_backup.sh
-#run
+```
+
+Explain
+
+Automated database and file backup.
+
+---
+
+## Execute Backup
+
+```bash
 sudo /usr/local/bin/osticket_backup.sh
+```
 
+Verification
 
-#manual backup
-Backup → mysqldump -u osticket_user -p osticket_db > /backup/osticket/osticket_db_backup_demo.sql
+```
+backup.log
 
-#check
-sudo tail -n 20 /backup/osticket/logs/backup.log
-sudo ls -lh /backup/osticket/db
-sudo ls -lh /backup/osticket/files
-sudo ls -lh /backup/osticket/checksums
+database backup
 
-sudo sh -c 'sha256sum -c /backup/osticket/checksums/backup_*.sha256'
+application backup
 
-#show crontab 
+checksum
+```
+
+---
+
+## Checksum
+
+```bash
+sudo sha256sum -c ...
+```
+
+Explain
+
+Verify backup integrity.
+
+---
+
+## Cron
+
+```bash
 sudo crontab -l
+```
 
-#backup
-sudo sh -c 'mysqldump -u root osticket_db > /backup/osticket/osticket_db_latest.sql'
-#check 
-sudo ls -lh /backup/osticket/osticket_db_latest.sql
+Explain
 
-#RTO
-sudo mysql -u root -e "DROP DATABASE IF EXISTS osticket_restore_test; CREATE DATABASE osticket_restore_test;"
+Daily backup at 2 AM.
 
-/usr/bin/time -p sudo sh -c 'mysql -u root osticket_restore_test < /backup/osticket/osticket_db_latest.sql'
+---
 
+## Restore Test
 
-#verify
-sudo mysql -u root -e "USE osticket_restore_test; SELECT t.ticket_id, t.number, c.subject, t.created FROM ost_ticket t LEFT JOIN ost_ticket__cdata c ON t.ticket_id=c.ticket_id ORDER BY t.ticket_id DESC LIMIT 5;"
+Create test database.
 
+Restore.
 
+Show ticket.
 
+Explain
+
+> Backup is usable because the restored database contains the same ticket records.
+
+---
+
+## Explain RTO/RPO
+
+Finish with
+
+> RTO is **30 minutes**, meaning the service should be restored within 30 minutes. RPO is **24 hours** because backups are performed daily. MTD and MTO are **4 hours**, meaning the organization can tolerate up to four hours of downtime before critical business operations are significantly affected.
+
+---
