@@ -193,7 +193,7 @@ Highlight
 Run on Kali
 
 ```bash
-nmap -sV -p 22,80,443,2222 192.168.194.131
+nmap -sV -p 22,80,443,2222 <IP ADDRESS>
 ```
 
 Explain
@@ -265,7 +265,7 @@ Validation
 From Kali
 
 ```bash
-nmap -sV -p3306 192.168.194.131
+nmap -sV -p 3306 <IP ADDRESS> 
 ```
 
 Expected
@@ -355,7 +355,7 @@ Explain
 ## 4. Security Headers
 
 ```bash
-curl -I http://192.168.194.131
+curl -I http://IP ADDRESS
 ```
 
 Highlight
@@ -373,7 +373,7 @@ Referrer-Policy
 ## 5. HTTPS
 
 ```bash
-curl -k -I https://192.168.194.131
+curl -k -I https://IP ADDRESS
 ```
 
 Explain
@@ -385,7 +385,7 @@ Explain
 ## 6. Sensitive File Protection
 
 ```bash
-curl -I http://192.168.194.131/web.config
+curl -I http://IP ADDRESS/web.config
 ```
 
 Expected
@@ -399,7 +399,7 @@ Expected
 ## 7. Apache Banner
 
 ```bash
-curl -I http://192.168.194.131
+curl -I http://IP ADDRESS
 ```
 
 Explain
