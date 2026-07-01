@@ -240,6 +240,7 @@ Jurus-Project/
 │   ├── osticket-apache-config-sample.md
 │   └── osticket-ssl-config-sample.md
 ├── Docs/
+│   └── JURUS_Khairul Azim.pdf
 │   └── Demo-Flow.md
 ├── Notes/
 │   ├── vapt-before-after.md
