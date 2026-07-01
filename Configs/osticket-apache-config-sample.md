@@ -14,7 +14,7 @@ File location:
 
 ```apache
 <VirtualHost *:80>
-    ServerName 192.168.194.131
+    ServerName SERVER-IP
     DocumentRoot /var/www/osticket
 
     <Directory /var/www/osticket>
@@ -84,19 +84,19 @@ sudo systemctl restart apache2
 Check security headers:
 
 ```bash
-curl -I http://192.168.194.131
+curl -I http://IP_ADDRESS
 ```
 
 Check sensitive file blocking:
 
 ```bash
-curl -I http://192.168.194.131/web.config
+curl -I http://IP_ADDRESS/web.config
 ```
 
 Check unnecessary HTTP method restriction:
 
 ```bash
-curl -X PUT -I http://192.168.194.131
+curl -X PUT -I http://IP_ADDRESS
 ```
 
 Check osTicket Apache logs:
