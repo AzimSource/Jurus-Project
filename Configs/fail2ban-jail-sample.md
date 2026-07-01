@@ -83,7 +83,7 @@ Status for the jail: sshd
 `- Actions
    |- Currently banned: 1
    |- Total banned: 1
-   `- Banned IP list: 192.168.194.129
+   `- Banned IP list: IP_ADDRESS
 ```
 
 ## Demo Explanation
