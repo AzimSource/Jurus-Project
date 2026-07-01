@@ -39,7 +39,7 @@ The purpose of this VAPT activity is to identify security weaknesses in the osTi
 ### Network Scan
 
 ```bash
-nmap -sV -p 22,80,443,2222 192.168.194.131
+nmap -sV -p 22,80,443,2222 <_IP ADDRESS_>
 ```
 
 Expected result:
@@ -54,7 +54,7 @@ Expected result:
 ### Database Exposure Check
 
 ```bash
-nmap -sV -p 3306 192.168.194.131
+nmap -sV -p 3306 <_IP ADDRESS_>
 ```
 
 Expected result:
@@ -99,13 +99,13 @@ Expected result:
 ```text
 Status for the jail: sshd
 Currently banned: 1
-Banned IP list: 192.168.194.129
+Banned IP list: IP ADDRESS
 ```
 
 ### Security Headers Validation
 
 ```bash
-curl -I http://192.168.194.131
+curl -I http://IP ADDRESS
 ```
 
 Expected headers:
@@ -120,7 +120,7 @@ Referrer-Policy: no-referrer-when-downgrade
 ### Sensitive File Blocking
 
 ```bash
-curl -I http://192.168.194.131/web.config
+curl -I http://IP ADDRESS/web.config
 ```
 
 Expected result:
@@ -132,7 +132,7 @@ HTTP/1.1 403 Forbidden
 ### HTTPS Validation
 
 ```bash
-curl -k -I https://192.168.194.131
+curl -k -I https://IP ADDRESS
 ```
 
 Expected result:
